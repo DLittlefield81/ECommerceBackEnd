@@ -6,37 +6,38 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 // get all products
 router.get('/', async (req, res) => {
   // find all products
-  try {
-    const storeData = await Product.findAll(
+  // be sure to include its associated Category and Tag data
+  Product.findAll({
+    include: [
       {
-        //Displays all product data when called
-        attributes: ["id", "product_name", "price", "stock", "category_id"],
-        // be sure to include its associated Category and Tag data.
-        include: [{ model: Category, through: Tag, as: 'category_id' }]
+        model: Product,
+        attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
       }
-    );
-    res.status(200).json(storeData);
-  } catch (err) {
-    res.status(500).json(err);
-  }
+    ]
+  })
+    .then(categoryData => res.json(categoryData))
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 // get one product
 router.get('/:id', async (req, res) => {
   // find a single product by its `id`
-	
+	// be sure to include its associated Category and Tag data
   try {
-    const storeData = await Location.findByPk(req.params.id, {
-      // be sure to include its associated Category and Tag data
-      include: [{ model: Category, through: ProductTag, as: 'category_id' }]
+    const productData = await Traveller.findByPk(req.params.id, {
+      // JOIN with locations, using the Trip through table
+      include: [{ model: Product, through: Tag, as: 'product' }]
     });
 
-    if (!storeData) {
-      res.status(404).json({ message: 'No items found with this id!' });
+    if (!productData) {
+      res.status(404).json({ message: 'No product found with this id!' });
       return;
     }
 
-    res.status(200).json(storeData);
+    res.status(200).json(productData);
   } catch (err) {
     res.status(500).json(err);
   }
